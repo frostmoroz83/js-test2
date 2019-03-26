@@ -11,7 +11,7 @@ class options {
   }
 
 
-  createDiv ( text, fontSize) {
+  createDiv ( text ) {
     let div = document.createElement('div');
     div.className = "test";
     div.innerHTML = text;
