@@ -114,79 +114,67 @@ window.addEventListener('DOMContentLoaded', function () {
     loading: 'Загрузка...',
     success: 'Спасибо! Скоро мы с вами свяжемся!',
     failure: 'Что-то пошло не так...'
-  };
-
-  let form = document.querySelector('.main-form'),
+  },
+  form = document.querySelector('.main-form'),
   formEmail = document.getElementById('form'),
-    
-    statusMessage = document.createElement('div'),
-    inputEmail = formEmail.getElementsByTagName('input');
-
+  statusMessage = document.createElement('div');
   statusMessage.classList.add('status');
 
-  sendForm(form);
-  sendForm(formEmail);
 
   function sendForm(elem) {
     elem.addEventListener('submit', function (event) {
       event.preventDefault();
       elem.appendChild(statusMessage);
-  
-      let request = new XMLHttpRequest(),
-      input = elem.getElementsByTagName('input');
-      request.open('POST', 'server.php');
-      // request.setRequestHeader ('Content-Type', 'application/x-www-form-urlencoded'); php формат данных
-      request.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
-  
       let formData = new FormData(elem);
       let obj = {};
       formData.forEach(function (value, key) {
         obj[key] = value;
       });
-      let json = JSON.stringify(obj);
+      let json = JSON.stringify(obj),
+      input = elem.getElementsByTagName('input');
   
-      // request.send(formData); php формат данных
-      request.send(json);
-  
-      request.addEventListener('readystatechange', function () {
-        if (request.readyState < 4) {
-          statusMessage.innerHTML = message.loading;
-        } else if (request.readyState === 4 && request.status == 200) {
-          statusMessage.innerHTML = message.success;
-        } else {
-          statusMessage.innerHTML = message.failure;
+      function postData(data) {
+        return new Promise(function(resolve,reject) {
+          let request = new XMLHttpRequest();
+          request.open('POST', 'server.php');
+          // request.setRequestHeader ('Content-Type', 'application/x-www-form-urlencoded'); php формат данных
+          request.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+
+          request.onreadystatechange = function() {
+            
+              if (request.readyState < 4) {
+                resolve();
+              } else if (request.readyState === 4){
+                if (request.status === 300 && request.status == 200) {
+                  resolve();
+              }
+                else {
+                reject();
+              }
+            }
+          };
+          // request.send(formData); php формат данных
+          request.send(data);
+        });
+      }//end post data
+
+      function clearInput () {
+        for (let i = 0; i < input.length; i++) {
+          input[i].value = '';
         }
-      });
-  
-      for (let i = 0; i < input.length; i++) {
-        input[i].value = '';
       }
   
+      postData(formData)
+        .then(()=> statusMessage.innerHTML = message.loading)
+        .then(()=> statusMessage.innerHTML = message.success)
+        .catch(()=> statusMessage.innerHTML = message.failure)
+        .then(clearInput);
+
     });
-
-    
-
-
   }
-
-  
-
-  //contact form
-  
-
-
-
-  
-
+  sendForm(form);
+  sendForm(formEmail);
   //end form
-
-
-
-
-
-
-
-
 
 
 });
